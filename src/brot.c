@@ -3,6 +3,8 @@
 
 #include "brot.h"
 
+#define MAX_ITERATIONS 256
+
 typedef struct complex {
   float re;
   float im;
@@ -68,10 +70,44 @@ int calculate_mandelbrot_region(void* args) {
         task->src_viewport.min_x, task->src_viewport.max_x
       );
 
-      task->dst_buf[dst_index    ] = src_re * 256;
-      task->dst_buf[dst_index + 1] = src_im * 256;
-      task->dst_buf[dst_index + 2] = 0x00;
+      complex z = {0, 0};
+      complex c = {src_re, src_im};
+
+      // julia
+      // complex z = {src_re, src_im};
+      // complex c = {0, 0.8};
+
+      int iter_count = 0;
+      while(iter_count < MAX_ITERATIONS) {
+        z = complex_add(complex_mul(z, z), c);
+        ++iter_count;
+
+        if ((z.re * z.re) + (z.im * z.im) >= 4.0) {
+          break;
+        }
+      }
+
+      unsigned char colour = 0x00;
+      if (iter_count < MAX_ITERATIONS) {
+        colour = iter_count;
+      }
+
+      int lock = mtx_lock(task->mutex);
+      if (lock == thrd_error) {
+        printf("thread: mutex error!\n");
+        continue;
+      }
+
+      task->dst_buf[dst_index    ] = colour;
+      task->dst_buf[dst_index + 1] = colour;
+      task->dst_buf[dst_index + 2] = colour;
       task->dst_buf[dst_index + 3] = 0xff;
+
+      int unlock = mtx_unlock(task->mutex);
+      if (unlock == thrd_error) {
+        printf("thread: error: cannot unlock\n");
+        return 1;
+      }
     }
   }
 

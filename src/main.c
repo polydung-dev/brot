@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <threads.h>
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -15,8 +16,11 @@
 #define WINDOW_HEIGHT 480
 
 unsigned char* display_buffer;
+mtx_t buffer_mutex;
 
 int main() {
+  mtx_init(&buffer_mutex, mtx_plain);
+
   atexit(glfwTerminate);
   glfwInit();
 
@@ -191,21 +195,33 @@ int main() {
   );
   glGenerateMipmap(GL_TEXTURE_2D);
 
-  // draw mangos //////////////////////////////////////////////////////////////
+  // basic mandelbrot /////////////////////////////////////////////////////////
+  float aspect_ratio = (float)WINDOW_HEIGHT / (float)WINDOW_WIDTH;
+  float min_x = -2.0;
+  float max_x = min_x + 3.0;
 
-  viewport src_viewport = {0.0, 0.0, 1.0, 1.0};
-  viewport dst_viewport = {64, 64, 256, 256};
+  float h = ((max_x - min_x) * aspect_ratio) / 2.0;
+  float min_y = -h;
+  float max_y = h;
+
+  viewport src_viewport = {min_x, min_y, max_x, max_y};
+  viewport dst_viewport = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
 
   Task task = {
     .dst_buf        = display_buffer,
+    .mutex          = &buffer_mutex,
     .buffer_width   = WINDOW_WIDTH,
     .buffer_height  = WINDOW_HEIGHT,
     .src_viewport   = src_viewport,
     .dst_viewport   = dst_viewport
   };
 
-
-  calculate_mandelbrot_region((void*)&task);
+  thrd_t thread;
+  int trv = thrd_create(&thread, calculate_mandelbrot_region, (void*)&task);
+  if (trv != thrd_success) {
+    fprintf(stderr, "Thread creation failed!\n");
+    return 1;
+  }
 
   // main loop ////////////////////////////////////////////////////////////////
   glClearColor(0.1, 0.1, 0.1, 1.0);
@@ -213,11 +229,30 @@ int main() {
     glfwPollEvents();
 
     // update display texture /////////////////////////////////////////////////
+    int lock = mtx_trylock(&buffer_mutex);
+    if (lock == thrd_busy) {
+      // skip frame if busy
+      printf("main: mutex busy\n");
+      continue;
+    }
+
+    if (lock == thrd_error) {
+      printf("main: mutex error!\n");
+      continue;
+    }
+
     glTexSubImage2D(
       GL_TEXTURE_2D, 0,
       0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
       GL_RGBA, GL_UNSIGNED_BYTE, display_buffer
     );
+
+    int unlock = mtx_unlock(&buffer_mutex);
+    // ??? 
+    if (unlock == thrd_error) {
+      printf("main: error: cannot unlock\n");
+      break;
+    }
 
     // display image //////////////////////////////////////////////////////////
     glClear(GL_COLOR_BUFFER_BIT);
@@ -229,6 +264,9 @@ int main() {
 
     glfwSwapBuffers(window);
   }
+
+  int res;
+  thrd_join(thread, &res);
 
   glDeleteTextures(1, &display_texture);
 
