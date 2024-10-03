@@ -14,6 +14,9 @@
 
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
+#define THREAD_COUNT 4
+thrd_t threads[THREAD_COUNT];
+Task* tasks[THREAD_COUNT];
 
 unsigned char* display_buffer;
 mtx_t buffer_mutex;
@@ -195,32 +198,49 @@ int main() {
   );
   glGenerateMipmap(GL_TEXTURE_2D);
 
-  // basic mandelbrot /////////////////////////////////////////////////////////
+  // create tasks /////////////////////////////////////////////////////////////
   float aspect_ratio = (float)WINDOW_HEIGHT / (float)WINDOW_WIDTH;
   float min_x = -2.0;
   float max_x = min_x + 3.0;
 
-  float h = ((max_x - min_x) * aspect_ratio) / 2.0;
-  float min_y = -h;
-  float max_y = h;
+  float h = ((max_x - min_x) * aspect_ratio);
+  float min_y = -h / 2.0;
 
-  viewport src_viewport = {min_x, min_y, max_x, max_y};
-  viewport dst_viewport = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+  float src_slice_h = h / THREAD_COUNT;
+  float dst_slice_h = (float)WINDOW_HEIGHT / THREAD_COUNT;
 
-  Task task = {
-    .dst_buf        = display_buffer,
-    .mutex          = &buffer_mutex,
-    .buffer_width   = WINDOW_WIDTH,
-    .buffer_height  = WINDOW_HEIGHT,
-    .src_viewport   = src_viewport,
-    .dst_viewport   = dst_viewport
-  };
+  // todo: implement a queue and thread pool
+  for (int i = 0; i < THREAD_COUNT; ++i) {
+    viewport src_viewport = {
+      min_x, min_y + (src_slice_h * i), max_x, min_y + (src_slice_h * (i + 1))
+    };
+    viewport dst_viewport = {
+      0, dst_slice_h * i, WINDOW_WIDTH, dst_slice_h * (i + 1)
+    };
 
-  thrd_t thread;
-  int trv = thrd_create(&thread, calculate_mandelbrot_region, (void*)&task);
-  if (trv != thrd_success) {
-    fprintf(stderr, "Thread creation failed!\n");
-    return 1;
+    Task* task = malloc(sizeof(Task));
+    task->dst_buf        = display_buffer;
+    task->mutex          = &buffer_mutex;
+    task->buffer_width   = WINDOW_WIDTH;
+    task->buffer_height  = WINDOW_HEIGHT;
+    task->src_viewport   = src_viewport;
+    task->dst_viewport   = dst_viewport;
+
+    tasks[i] = task;
+  }
+
+  // spawn threads ////////////////////////////////////////////////////////////
+  for (int i = 0; i < THREAD_COUNT; ++i) {
+    thrd_t thread;
+
+    int trv = thrd_create(
+      &thread, calculate_mandelbrot_region, (void*)(tasks[i])
+    );
+    if (trv != thrd_success) {
+      fprintf(stderr, "Thread creation failed!\n");
+      return 1;
+    }
+    threads[i] = thread;
   }
 
   // main loop ////////////////////////////////////////////////////////////////
@@ -248,7 +268,7 @@ int main() {
     );
 
     int unlock = mtx_unlock(&buffer_mutex);
-    // ??? 
+    // ???
     if (unlock == thrd_error) {
       printf("main: error: cannot unlock\n");
       break;
@@ -265,8 +285,11 @@ int main() {
     glfwSwapBuffers(window);
   }
 
-  int res;
-  thrd_join(thread, &res);
+  for (int i = 0; i < THREAD_COUNT; ++i) {
+    int res;
+    thrd_join(threads[i], &res);
+    free(tasks[i]);
+  }
 
   glDeleteTextures(1, &display_texture);
 

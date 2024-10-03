@@ -31,9 +31,9 @@ float map(
   float to_range = to_max - to_min;
 
   float scale = to_range / from_range;
-  float offset = to_min - from_min;
+  float offset = val - from_min;
 
-  return (val * scale) + offset;
+  return to_min + (scale * offset);
 }
 
 int calculate_mandelbrot_region(void* args) {
@@ -53,7 +53,7 @@ int calculate_mandelbrot_region(void* args) {
 
     float src_im = map(
       y + dst_y_offset,
-      0, task->buffer_height,
+      dst_y_offset, task->dst_viewport.max_y,
       task->src_viewport.min_y, task->src_viewport.max_y
     );
 
@@ -66,7 +66,7 @@ int calculate_mandelbrot_region(void* args) {
 
       float src_re = map(
         x + dst_x_offset,
-        0, task->buffer_width,
+        dst_x_offset, task->dst_viewport.max_x,
         task->src_viewport.min_x, task->src_viewport.max_x
       );
 
