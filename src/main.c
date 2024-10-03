@@ -7,6 +7,7 @@
 
 #include "debug/gl_debug.h"
 
+#include "brot.h"
 #include "error.h"
 #include "pdm.h"
 
@@ -47,7 +48,7 @@ int main() {
     0.0, 0.0,
     1.0, 0.0,
     1.0, 1.0,
-    0.0, 1.0 
+    0.0, 1.0
   };
   unsigned char indices[] = {0, 1, 2, 0, 2, 3};
 
@@ -191,17 +192,20 @@ int main() {
   glGenerateMipmap(GL_TEXTURE_2D);
 
   // draw mangos //////////////////////////////////////////////////////////////
-  for (size_t y = 0; y < WINDOW_HEIGHT; ++y) {
-    size_t offset = y * WINDOW_WIDTH;
-    for (size_t x = 0; x < WINDOW_WIDTH; ++x) {
-      size_t index = (x + offset) * 4;
 
-      display_buffer[index    ] = x;
-      display_buffer[index + 1] = y;
-      display_buffer[index + 2] = 0x00;
-      display_buffer[index + 3] = 0xff;
-    }
-  }
+  viewport src_viewport = {0.0, 0.0, 1.0, 1.0};
+  viewport dst_viewport = {64, 64, 256, 256};
+
+  Task task = {
+    .dst_buf        = display_buffer,
+    .buffer_width   = WINDOW_WIDTH,
+    .buffer_height  = WINDOW_HEIGHT,
+    .src_viewport   = src_viewport,
+    .dst_viewport   = dst_viewport
+  };
+
+
+  calculate_mandelbrot_region((void*)&task);
 
   // main loop ////////////////////////////////////////////////////////////////
   glClearColor(0.1, 0.1, 0.1, 1.0);
