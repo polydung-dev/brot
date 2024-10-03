@@ -2,7 +2,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME           = project
-OUTPUT_DIRECTORY       = ./docs
+OUTPUT_DIRECTORY       = ./doxy
 CREATE_SUBDIRS         = YES
 STRIP_FROM_PATH        = ./src/
 STRIP_FROM_INC_PATH    = ./src/
