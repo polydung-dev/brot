@@ -1,0 +1,73 @@
+#---------------------------------------------------------------------------
+# Project related configuration options
+#---------------------------------------------------------------------------
+PROJECT_NAME           = project
+OUTPUT_DIRECTORY       = ./docs
+CREATE_SUBDIRS         = YES
+STRIP_FROM_PATH        = ./src/
+STRIP_FROM_INC_PATH    = ./src/
+JAVADOC_AUTOBRIEF      = YES
+
+TIMESTAMP              = DATETIME
+
+#---------------------------------------------------------------------------
+# Build related configuration options
+#---------------------------------------------------------------------------
+
+# required for graph generation???
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = NO
+
+# has no effect when EXTRACT_ALL == YES
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+SORT_MEMBER_DOCS       = NO
+# ..
+SORT_MEMBERS_CTORS_1ST = YES
+
+#---------------------------------------------------------------------------
+# Configuration options related to warning and progress messages
+#---------------------------------------------------------------------------
+QUIET                  = YES
+
+#---------------------------------------------------------------------------
+# Configuration options related to the input files
+#---------------------------------------------------------------------------
+INPUT                  =
+FILE_PATTERNS          = *.c \
+                         *.h \
+                         readme.md
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = ./readme.md
+
+#---------------------------------------------------------------------------
+# Configuration options related to source browsing
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Configuration options related to the alphabetical class index
+#---------------------------------------------------------------------------
+ALPHABETICAL_INDEX     = NO
+
+#---------------------------------------------------------------------------
+# Configuration options related to the HTML output
+#---------------------------------------------------------------------------
+HTML_COLORSTYLE        = AUTO_DARK
+GENERATE_TREEVIEW      = YES
+# HTML_FORMULA_FORMAT    = svg
+
+#---------------------------------------------------------------------------
+# Configuration options related to the LaTeX output
+#---------------------------------------------------------------------------
+GENERATE_LATEX         = NO
+
+#---------------------------------------------------------------------------
+# Configuration options related to diagram generator tools
+#---------------------------------------------------------------------------
+HIDE_UNDOC_RELATIONS   = NO
+HAVE_DOT               = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+# DOT_IMAGE_FORMAT       = svg
+# INTERACTIVE_SVG        = YES
+DOT_PATH               = /usr/bin/dot
