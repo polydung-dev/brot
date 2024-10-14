@@ -1,28 +1,13 @@
+#include <complex.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "brot.h"
 
 #define MAX_ITERATIONS 256
 
-typedef struct complex {
-  float re;
-  float im;
-} complex;
-
-complex complex_add(complex a, complex b) {
-  complex c = {a.re + b.re, a.im + b.im};
-  return c;
-}
-
-complex complex_mul(complex a, complex b) {
-  complex c = {
-    (a.re * b.re) - (a.im * b.im),
-    (a.re * b.im) + (a.im * b.re)
-  };
-
-  return c;
-}
+#define DO_SLOW_THREAD 0 //!< slow down render to observe threads
 
 float map(
   float val, float from_min, float from_max, float to_min, float to_max
@@ -70,19 +55,19 @@ int calculate_mandelbrot_region(void* args) {
         task->src_viewport.min_x, task->src_viewport.max_x
       );
 
-      complex z = {0, 0};
-      complex c = {src_re, src_im};
+      double complex z = 0;
+      double complex c = src_re + (src_im * I);
 
       // julia
-      // complex z = {src_re, src_im};
-      // complex c = {0, 0.8};
+      // double complex z = src_re + (src_im * I);
+      // double complex c = 0 + (0.8 * I);
 
       int iter_count = 0;
       while(iter_count < MAX_ITERATIONS) {
-        z = complex_add(complex_mul(z, z), c);
+        z = (z * z) + c;
         ++iter_count;
 
-        if ((z.re * z.re) + (z.im * z.im) >= 4.0) {
+        if (cabs(z) >= 2.0) {
           break;
         }
       }
@@ -108,6 +93,10 @@ int calculate_mandelbrot_region(void* args) {
         printf("thread: error: cannot unlock\n");
         return 1;
       }
+
+      #if DO_SLOW_THREAD == 1
+      thrd_sleep(&(struct timespec){.tv_nsec=100}, NULL);
+      #endif
     }
   }
 

@@ -9,7 +9,7 @@ name=mandelbrot
 
 CFLAGS=$(warnings) $(sanitize) $(defines) -I./src/ -MMD -g3 -O3
 LDFLAGS=-L/usr/local/lib/ -Wl,-rpath,/usr/local/lib/ $(sanitize)
-LDLIBS=-lGL -lglfw -lglad
+LDLIBS=-lGL -lglfw -lglad -lm
 
 sources=$(wildcard src/*.c) $(wildcard src/*/*.c)
 headers=$(wildcard src/*.h) $(wildcard src/*/*.h)
