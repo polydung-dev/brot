@@ -2,7 +2,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME           = project
-OUTPUT_DIRECTORY       = ./docs
+OUTPUT_DIRECTORY       = ./doxy
 CREATE_SUBDIRS         = YES
 STRIP_FROM_PATH        = ./src/
 STRIP_FROM_INC_PATH    = ./src/
@@ -37,6 +37,8 @@ INPUT                  =
 FILE_PATTERNS          = *.c \
                          *.h \
                          readme.md
+EXCLUDE                = build \
+                         ext
 RECURSIVE              = YES
 USE_MDFILE_AS_MAINPAGE = ./readme.md
 

@@ -1,0 +1,12 @@
+#ifndef ERROR_H_
+#define ERROR_H_
+
+enum ErrorCode {
+  BROT_SUCCESS = 0,
+  BROT_WINDOW_ERROR,
+  BROT_OPENGL_ERROR,
+  BROT_SHADER_ERROR,
+  BROT_THREAD_ERROR
+};
+
+#endif // ERROR_H_
