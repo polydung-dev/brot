@@ -37,6 +37,8 @@ INPUT                  =
 FILE_PATTERNS          = *.c \
                          *.h \
                          readme.md
+EXCLUDE                = build \
+                         ext
 RECURSIVE              = YES
 USE_MDFILE_AS_MAINPAGE = ./readme.md
 
