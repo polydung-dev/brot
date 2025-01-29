@@ -7,9 +7,9 @@ name=mandelbrot
 # defines=-DDEBUG_OUTPUT
 # defines=-DNDEBUG
 
-CFLAGS=$(warnings) $(sanitize) $(defines) -I./src/ -MMD -g3 -O3
-LDFLAGS=-L/usr/local/lib/ -Wl,-rpath,/usr/local/lib/ $(sanitize)
-LDLIBS=-lGL -lglfw -lglad -lm
+CFLAGS=$(warnings) $(sanitize) $(defines) -I./src/ -I./vendor/include/ -MMD -g3 -O3
+LDFLAGS=$(sanitize)
+LDLIBS=-lGL -lglfw -lm
 
 sources=$(wildcard src/*.c) $(wildcard src/*/*.c)
 headers=$(wildcard src/*.h) $(wildcard src/*/*.h)
@@ -26,7 +26,7 @@ all: $(build_dirs) $(dirs) out/$(name)
 
 .PHONY:
 clean:
-	-rm -r build/
+	-rm -r $(objects) $(depends)
 
 .PHONY:
 install:
@@ -45,13 +45,19 @@ uninstall:
 %/:
 	mkdir -p $@
 
-out/$(name): $(objects)
+out/$(name): $(objects) out/libglad.a
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 -include $(depends)
 
 build/%.o: src/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
+
+build/%.o: vendor/src/%.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
+
+out/libglad.a: build/gl.o
+	$(AR) $(ARFLAGS) $@ $?
 
 ###############################################################################
 

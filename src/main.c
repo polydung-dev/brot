@@ -3,7 +3,7 @@
 #include <string.h>
 #include <threads.h>
 
-#include <glad/gl.h>
+#include "glad/gl.h"
 #include <GLFW/glfw3.h>
 
 #include "debug/gl_debug.h"

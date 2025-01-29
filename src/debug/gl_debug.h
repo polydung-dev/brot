@@ -1,7 +1,7 @@
 #ifndef DEBUG_GL_DEBUG_H_
 #define DEBUG_GL_DEBUG_H_
 
-#include <glad/gl.h>
+#include "glad/gl.h"
 #include <GLFW/glfw3.h> // APIENTRY
 
 int enable_gl_debug_output();
